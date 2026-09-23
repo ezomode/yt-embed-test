@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"><title>YT-A hidden-init</title>
+<style>
+  #wrap { width: 640px; }
+  #hiddenbox { display: none; }
+  #player, #player iframe { width: 100%; height: 360px; display: block; }
+  #log { font: 13px monospace; white-space: pre-wrap; background: #f4f4f4; padding: 8px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h3>A: player created while container display:none, unhidden 2s later</h3>
+<div id="wrap">
+  <div id="hiddenbox"><div id="player"></div></div>
+</div>
+<div id="log">booting…</div>
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+var logEl = document.getElementById('log');
+function log(m) { logEl.textContent += '\n' + m; }
+var player;
+function onYouTubeIframeAPIReady() {
+  log('api ready, creating player inside display:none');
+  player = new YT.Player('player', {
+    width: '100%', height: '360',
+    playerVars: { iv_load_policy: '3', rel: '0' },
+    events: {
+      onReady: function (e) {
+        var r = e.target.getIframe().getBoundingClientRect();
+        log('onReady, iframe rect: ' + r.width + 'x' + r.height);
+        e.target.mute();
+        setTimeout(function () {
+          document.getElementById('hiddenbox').style.display = 'block';
+          var r2 = e.target.getIframe().getBoundingClientRect();
+          log('unhidden, iframe rect now: ' + r2.width + 'x' + r2.height);
+          e.target.loadVideoById('aqz-KE-bpKQ');
+          log('loadVideoById called');
+        }, 2000);
+      },
+      onStateChange: function (e) {
+        log('state: ' + e.data + ' t=' + (player.getCurrentTime ? player.getCurrentTime().toFixed(1) : '?'));
+      },
+      onError: function (e) { log('ERROR: ' + e.data); }
+    }
+  });
+}
+setTimeout(function () {
+  if (!player) { log('no player after 8s'); return; }
+  var r = player.getIframe().getBoundingClientRect();
+  log('final: state=' + player.getPlayerState() +
+      ' t=' + player.getCurrentTime().toFixed(1) +
+      ' loadedFrac=' + player.getVideoLoadedFraction().toFixed(2) +
+      ' rect=' + r.width + 'x' + r.height);
+}, 12000);
+</script>
+</body>
+</html>
